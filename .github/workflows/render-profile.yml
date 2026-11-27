@@ -1,0 +1,55 @@
+name: Render profile cards
+
+on:
+  schedule:
+    - cron: "17 21 * * *" # 02:17 in Karachi, after the day's contributions are in
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/**", "assets/fonts/**", ".github/workflows/render-profile.yml"]
+
+# Only what the job needs: read the repo, push the regenerated cards.
+permissions:
+  contents: write
+
+concurrency:
+  group: render-profile
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: scripts/requirements.txt
+
+      - run: pip install -r scripts/requirements.txt
+
+      - name: Fetch the last year of contributions
+        run: python scripts/fetch_contributions.py
+        env:
+          # The built-in token can read public contribution data. To count private
+          # contributions too, add a fine-grained PAT (no repo access needed) as the
+          # CONTRIBUTIONS_TOKEN secret; it is used when present.
+          GITHUB_TOKEN: ${{ secrets.CONTRIBUTIONS_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Render SVG cards
+        run: python scripts/render.py
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets data
+          if git diff --cached --quiet; then
+            echo "Cards unchanged."
+          else
+            git commit -m "Render profile cards"
+            git push
+          fi
