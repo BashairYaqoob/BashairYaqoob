@@ -17,7 +17,7 @@ def render() -> str:
         h = rnd.uniform(8, 34)
         towers.append(f'<rect x="{x:.0f}" y="{70-h:.0f}" width="{w:.0f}" height="{h:.0f}"/>')
         x += w + rnd.uniform(1, 4)
-    line = f"— connection closed by bashair@karachi · {K.LOCALE} —"
+    line = f"— connection closed by @BashairYaqoob · {K.LOCALE} —"
     body = (f'<g fill="{INK["line"]}" mask="url(#fadeout)">{"".join(towers)}</g>'
             f'<path d="M0 70 H{W}" stroke="{INK["line2"]}" mask="url(#fadeout)"/>'
             f'<text class="m" x="{W/2}" y="98" text-anchor="middle" style="font-size:12.5px" fill="{INK["muted"]}">{esc(line)}</text>')

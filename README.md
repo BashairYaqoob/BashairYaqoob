@@ -95,5 +95,5 @@ updating    my 3D portfolio → bashairyaqoob.vercel.app
 Working on something with language models, agents or retrieval? I'd like to hear about it. Reach me on [LinkedIn](https://www.linkedin.com/in/bashair-y-a1a274357/), at [bashairyaqoob@gmail.com](mailto:bashairyaqoob@gmail.com) or [bashairyaqoob05@gmail.com](mailto:bashairyaqoob05@gmail.com), or through [my portfolio](https://bashairyaqoob.vercel.app).
 
 <p align="center">
-  <img src="assets/footer.svg" width="100%" alt="Connection closed by bashair@karachi, Karachi, Pakistan.">
+  <img src="assets/footer.svg" width="100%" alt="Connection closed by @BashairYaqoob, Karachi, Pakistan.">
 </p>
