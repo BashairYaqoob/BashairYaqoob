@@ -89,5 +89,5 @@ SECTIONS = {
     "work": ("03", "Selected work", "ls ~/projects"),
     "city": ("04", "A year in lights", "./render-city"),
     "now": ("05", "Currently", "cat ~/now.md"),
-    "connect": ("06", "Connect", "ssh bashair@karachi"),
+    "connect": ("06", "Connect", "ssh @BashairYaqoob"),
 }
