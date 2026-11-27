@@ -81,8 +81,8 @@ def render() -> str:
            f'<path d="M{px} {py+30} H{px+pw}" stroke="{INK["line"]}"/>',
            "".join(f'<circle cx="{px+18+k*16}" cy="{py+15}" r="4.5" fill="{c}"/>' for k, c in
                    enumerate([INK["coral"], INK["amber"], INK["teal"]])),
-           f'<text class="m" x="{px+pw/2}" y="{py+19}" text-anchor="middle" style="font-size:11px" fill="{INK["muted"]}">bashair@karachi: ~ — neofetch</text>',
-           f'<text class="m b" x="{px+22}" y="{py+58}" style="font-size:13.5px" fill="{INK["gold"]}">bashair<tspan fill="{INK["muted"]}">@</tspan>karachi</text>',
+           f'<text class="m" x="{px+pw/2}" y="{py+19}" text-anchor="middle" style="font-size:11px" fill="{INK["muted"]}">@BashairYaqoob: ~ — neofetch</text>',
+           f'<text class="m b" x="{px+22}" y="{py+58}" style="font-size:13.5px" fill="{INK["gold"]}"><tspan fill="{INK["muted"]}">@</tspan>BashairYaqoob</text>',
            f'<path d="M{px+22} {py+68} H{px+pw-22}" stroke="{INK["line2"]}" stroke-dasharray="2 4"/>']
     for k, (key, val) in enumerate(K.DETAILS):
         y = py + 94 + k * rows_h
@@ -151,7 +151,7 @@ def render() -> str:
 {skyline}
 <text class="m" x="{W-56}" y="{H-30}" text-anchor="end" style="font-size:10px;letter-spacing:.2em" fill="{INK['dim']}">01 — SCROLL ↓</text>'''
     used = ("".join(a1 + a2) + "".join(t for t, _, _ in meta) + "".join(k + v for k, v in K.DETAILS)
-            + "bashair@karachi:~—neofetchStatusopentocollaborationONTHEWORKBENCH01—SCROLL↓"
+            + "@BashairYaqoob:~—neofetchStatusopentocollaborationONTHEWORKBENCH01—SCROLL↓"
             + "".join(n + "".join(ls) for n, ls in bench))
     return document(W, H, body, css=css, defs=defs, families=("mono", "serif"),
                     text_for_fonts=used + "".join(K.TAGLINE),
