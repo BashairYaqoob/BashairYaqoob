@@ -68,10 +68,10 @@ Away from the editor I help run student tech communities:
 </picture>
 
 <p align="center">
-  <picture><source media="(prefers-reduced-motion: reduce)" srcset="assets/static/city.svg"><img src="assets/city.svg" width="100%" alt="Karachi — The City of Lights: an isometric Karachi night city built from my GitHub contributions over the last year, laid out like the contribution graph. One building per day, taller and brighter on busier days, with Mazar-e-Quaid, Frere Hall and Empress Market behind and the Arabian Sea in front."></picture>
+  <picture><source media="(prefers-reduced-motion: reduce)" srcset="assets/static/city.svg"><img src="assets/city.svg" width="100%" alt="Karachi — The City of Lights: an isometric Karachi night city built from my GitHub contributions over the last year, laid out like the contribution graph. One building per day, taller and brighter on busier days, with Mazar-e-Quaid, Frere Hall, Empress Market and Bahria Icon Tower behind, Teen Talwar on the seafront, a camel on the beach and the Arabian Sea in front."></picture>
 </p>
 
-<p align="center"><sub>Karachi is called the City of Lights. This city is rebuilt every night from my contribution calendar, laid out exactly like the graph: weeks run left to right, Sunday at the back, Saturday on the seafront. Each building is one day, taller and brighter the more I committed. Mazar-e-Quaid, Frere Hall and Empress Market stand behind.</sub></p>
+<p align="center"><sub>Karachi is called the City of Lights. This city is rebuilt every night from my contribution calendar, laid out exactly like the graph: weeks run left to right, Sunday at the back, Saturday on the seafront. Each building is one day, taller and brighter the more I committed. Mazar-e-Quaid, Frere Hall, Empress Market and Bahria Icon Tower stand behind, with Teen Talwar on the seafront and a Sea View camel on the beach.</sub></p>
 
 <br>
 
