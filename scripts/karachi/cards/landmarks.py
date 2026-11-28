@@ -13,7 +13,7 @@ from ..svg import INK
 WOOD = ("#8A5E3C", "#6F4A2F", "#573A25")      # food-stall counters
 # canopy colours for the food street, kept to the card's amber/gold palette: (top/front, side)
 CANOPIES = [("#C98A3A", "#9C6A2A"), ("#B8742F", "#8E5823"), ("#D9A04A", "#A97A33")]
-FAIRY = ["#FFD58C", "#F4B04A", "#FFF3D1", "#FFC36B"]
+FAIRY = ["#9EE4F2", "#7CC8E8", "#D6F3FA", "#8FD9CF", "#B8D4FF"]   # cool: ice, sky, mint, periwinkle
 LIMESTONE = ("#D6C39A", "#B49E73", "#8A7853")  # Frere Hall: pale yellow Karachi limestone
 SLATE = ("#6B6C7A", "#585966", "#474855")      # Frere Hall roofs
 SANDSTONE = ("#DDB878", "#BE965A", "#91703F")  # Empress Market: golden Jodhpur sandstone
@@ -136,7 +136,7 @@ def stall(x, y, n):
     return depth(x0 + .5, y0 + .4), "".join(out)
 
 
-def fairy_string(xa, xb, y=-1.05, z=24, sag=7, step=7, seed=0):
+def fairy_string(xa, xb, y=-1.05, z=50, sag=5, step=7, seed=0):
     """Poles at both ends and a sagging string of twinkling bulbs between them."""
     (ax, ay), (bx, by) = P(xa, y, z), P(xb, y, z)
     mx, my = (ax + bx) / 2, (ay + by) / 2 + sag * 2
@@ -151,8 +151,9 @@ def fairy_string(xa, xb, y=-1.05, z=24, sag=7, step=7, seed=0):
         qx = (1 - t) ** 2 * ax + 2 * (1 - t) * t * mx + t * t * bx
         qy = (1 - t) ** 2 * ay + 2 * (1 - t) * t * my + t * t * by
         c = FAIRY[(j + seed) % len(FAIRY)]
-        out.append(f'<circle class="fl" style="animation-delay:{((j * 7 + seed * 3) % 23) / 10:.1f}s" '
-                   f'cx="{qx:.1f}" cy="{qy+1:.1f}" r="1.6" fill="{c}"/>')
+        out.append(f'<g class="fl" style="animation-delay:{((j * 7 + seed * 3) % 23) / 10:.1f}s">'
+                   f'<circle cx="{qx:.1f}" cy="{qy+1:.1f}" r="4.2" fill="{c}" opacity=".22"/>'
+                   f'<circle cx="{qx:.1f}" cy="{qy+1:.1f}" r="1.7" fill="{c}"/></g>')
     return "".join(out)
 
 
