@@ -53,6 +53,7 @@ Away from the editor I help run student tech communities:
 <p align="center"><sub>
   also shipped&nbsp;
   <a href="https://ehsanx.com">EhsanX</a>, a production site for a leadership consultancy ·
+  <a href="https://drshahidqureshi.com/">Dr Shahid Qureshi</a>, an entrepreneurship site in WordPress + Elementor ·
   <a href="https://github.com/BashairYaqoob/CarWash_Voice_Agent">Car Wash Voice Agent</a>, Vapi + FastAPI booking ·
   <a href="https://github.com/BashairYaqoob/AI-Project---MindHaven">MindHaven</a>, a mental-health journal with an AI chatbot ·
   <a href="https://wandererfolk.lovable.app/">Wanderfolk</a>, an AI travel planner ·
