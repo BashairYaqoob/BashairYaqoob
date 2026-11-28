@@ -8,7 +8,7 @@ The city is GitHub's contribution graph stood up in 3D:
   * quiet days stay as low, dark houses — Karachi's low-rise sprawl around the lit towers
 Around it, drawn in the same projection (see landmarks.py) as scenery, not data: Mazar-e-Quaid,
 Frere Hall, Empress Market and Bahria Icon Tower behind; Teen Talwar on the seafront; a Sea View
-camel on the beach.
+camel pacing the beach. Everything stands on one ground slab, like the graph's own plate.
 """
 from __future__ import annotations
 
@@ -30,7 +30,8 @@ FACE = dict(top="#1B2C4F", front="#0F1D37", side="#0A1528", edge="#22355A")
 LIT_TOP = "#2A3550"
 
 
-def _building(i, k, day, peak, rnd, out, wins, extras):
+def _building(i, k, day, peak, rnd, out):
+    """Walls, then windows and roof details, so nearer buildings always cover farther ones."""
     x0, x1 = i + MARGIN, i + 1 - MARGIN
     y0, y1 = k + MARGIN, k + 1 - MARGIN
     lit = bool(day.count)
@@ -58,16 +59,16 @@ def _building(i, k, day, peak, rnd, out, wins, extras):
         if rnd.random() < .7:
             rows_side.append(f'<rect x="{face_len/2-1.2:.1f}" y="{-v-3.4:.1f}" width="2.4" height="3.4"/>')
     cls = "lw tw" if rnd.random() < .1 else "lw"
-    wins.append(f'<g class="{cls}" style="animation-delay:{t:.2f}s" fill="{color}">'
+    out.append(f'<g class="{cls}" style="animation-delay:{t:.2f}s" fill="{color}">'
                 f'<g transform="matrix({CA:.4f} {SA:.4f} 0 1 {fx:.1f} {fy:.1f})">{"".join(rows_front)}</g>'
                 f'<g transform="matrix({-CB:.4f} {SB:.4f} 0 1 {sx:.1f} {sy:.1f})" opacity=".7">{"".join(rows_side)}</g></g>')
     if h > 70 and rnd.random() < .6:  # rooftop aviation light
         cx, cy = P(i + .5, k + .5, h)
-        extras.append(f'<path d="M{cx:.1f} {cy:.1f}v-9" stroke="#2B4068" stroke-width=".8"/>'
+        out.append(f'<path d="M{cx:.1f} {cy:.1f}v-9" stroke="#2B4068" stroke-width=".8"/>'
                       f'<circle class="beacon" style="animation-delay:{rnd.random()*2.6:.1f}s" cx="{cx:.1f}" cy="{cy-10:.1f}" r="1.4" fill="{INK["coral"]}"/>')
     elif rnd.random() < .35:  # rooftop water tank
         cx, cy = P(x0 + .2, y0 + .2, h)
-        extras.append(f'<rect x="{cx:.1f}" y="{cy-4:.1f}" width="5" height="4" rx="1" fill="#14233F" stroke="#22355A" stroke-width=".5"/>')
+        out.append(f'<rect x="{cx:.1f}" y="{cy-4:.1f}" width="5" height="4" rx="1" fill="#14233F" stroke="#22355A" stroke-width=".5"/>')
     return h
 
 
@@ -83,15 +84,24 @@ def render(year: Year) -> str:
     prom = [P(0, 7), P(n, 7), P(n + 3.2, 7), P(n + 3.2, 7.45), P(0, 7.45)]
     sea_top = [P(0, 7.45), P(n + 3.2, 7.45)]
     beach = [P(8, 7.45), P(21, 7.45), P(21, 14.2), P(13, 14.2)]
+    # one ground slab under everything, like the plate of the contribution graph, with a road
+    # between the old city at the back and the grid
+    gx0, gx1, gy0, gy1, thick = -0.6, n + 3.2, -6.6, 7.45, 9
+    slab_top = [P(gx0, gy0), P(gx1, gy0), P(gx1, gy1), P(gx0, gy1)]
+    slab_front = [P(gx0, gy1), P(gx1, gy1), P(gx1, gy1, -thick), P(gx0, gy1, -thick)]
+    slab_side = [P(gx1, gy0), P(gx1, gy1), P(gx1, gy1, -thick), P(gx1, gy0, -thick)]
+    road = [P(gx0, -0.55), P(gx1, -0.55), P(gx1, -0.05), P(gx0, -0.05)]
+    road_line = (P(gx0, -0.3), P(gx1, -0.3))
+    camel_svg, camel_css = landmarks.camel(14.2, 13.0)
     sea = f'{_pts(*sea_top)} {W},{sea_top[1][1]:.1f} {W},{H} 0,{H} 0,{sea_top[0][1]:.1f}'
 
     cells = sorted(((i, k) for i in range(n) for k in range(7)), key=lambda c: depth(*c))
-    blds, wins, extras, best_top = [], [], [], None
+    blds, best_top = [], None
     for i, k in cells:
         day = weeks[i][k]
         if day.count is None:
             continue  # outside the 365-day window: an empty plot
-        h = _building(i, k, day, peak, rnd, blds, wins, extras)
+        h = _building(i, k, day, peak, rnd, blds)
         if day.date == best.date:
             best_top = P(i + .5, k + .5, h)
 
@@ -134,9 +144,10 @@ def render(year: Year) -> str:
 
     css = (
         f".m{{fill:{INK['muted']}}}text.m{{font-size:9.5px}}.small{{font-size:9.5px}}"
-        f"text.m.stat{{font-size:20px;fill:{INK['gold']}}}text.m.tag{{font-size:10px;fill:{INK['gold']}}}"
+        f"text.m.stat{{font-size:20px;fill:{INK['gold']}}}text.m.tag{{font-size:10px;fill:{INK['gold']};paint-order:stroke;stroke:#0A1224;stroke-width:3.2px;stroke-linejoin:round}}"
         f"text.m.mo{{font-size:9px;fill:#5B6E92}}"
-        ".land polygon{stroke:#22355A;stroke-width:.5;stroke-linejoin:round}"
+        ".land polygon{stroke:#000;stroke-opacity:.28;stroke-width:.5;stroke-linejoin:round}"
+        + camel_css +
         f".tp{{fill:{FACE['top']}}}.tl{{fill:{LIT_TOP}}}.fr{{fill:{FACE['front']}}}.sd{{fill:{FACE['side']}}}"
         f".blds polygon{{stroke:{FACE['edge']};stroke-width:.5;stroke-linejoin:round}}"
         ".lw{animation:on .7s ease-out backwards}@keyframes on{from{opacity:0}}"
@@ -167,13 +178,17 @@ def render(year: Year) -> str:
 <circle cx="860" cy="210" r="48" fill="url(#moonglow)"/>
 <path d="M868 191a21 21 0 1 0 9 36a17 17 0 1 1 -9 -36z" fill="{INK['gold']}" opacity=".92"/>
 <rect width="{W}" height="{H}" fill="url(#haze)"/>
+<polygon points="{sea}" fill="url(#sea)"/>
+{waves}<polygon points="{_pts(*beach)}" fill="#3A3326" stroke="#7D8DA6" stroke-opacity=".5" stroke-width=".8" stroke-dasharray="5 4"/>{camel_svg}{dhow}
+<polygon points="{_pts(*slab_side)}" fill="#050B16"/><polygon points="{_pts(*slab_front)}" fill="#08111F"/>
+<polygon points="{_pts(*slab_top)}" fill="#101A2E" stroke="#1C2D4C" stroke-width=".8"/>
+<polygon points="{_pts(*road)}" fill="#0A111F"/>
+<path d="M{road_line[0][0]:.1f} {road_line[0][1]:.1f} L{road_line[1][0]:.1f} {road_line[1][1]:.1f}" stroke="{INK['amber']}" stroke-opacity=".35" stroke-width=".8" stroke-dasharray="4 6"/>
 <g class="land">{behind}</g>
 <ellipse cx="{tip[0]:.1f}" cy="{tip[1]+40:.1f}" rx="46" ry="58" fill="url(#mglow)"/>
-<polygon points="{sea}" fill="url(#sea)"/>
-{waves}<polygon points="{_pts(*beach)}" fill="#26232F" stroke="#3A4F6E" stroke-width=".8" stroke-dasharray="5 4"/>{landmarks.camel(16.4, 13.0)}{dhow}
 <polygon points="{_pts(*plate)}" fill="#0B1528" stroke="#1C2D4C" stroke-width=".8"/>
 <polygon points="{_pts(*prom)}" fill="#152440"/>
-<g class="blds">{"".join(blds)}</g>{"".join(extras)}{"".join(wins)}
+<g class="blds">{"".join(blds)}</g>
 <g class="land">{landmarks.teen_talwar(n + 1.9, 6.1)}</g>
 {"".join(months)}
 {marker}
