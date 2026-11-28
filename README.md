@@ -68,10 +68,10 @@ Away from the editor I help run student tech communities:
 </picture>
 
 <p align="center">
-  <picture><source media="(prefers-reduced-motion: reduce)" srcset="assets/static/city.svg"><img src="assets/city.svg" width="100%" alt="Karachi — The City of Lights: an illustrated night skyline of Karachi drawn from my GitHub contributions over the last year. One building per week, seven floors per building, a lit window for every day with contributions."></picture>
+  <picture><source media="(prefers-reduced-motion: reduce)" srcset="assets/static/city.svg"><img src="assets/city.svg" width="100%" alt="Karachi — The City of Lights: an isometric Karachi night city built from my GitHub contributions over the last year, laid out like the contribution graph. One building per day, taller and brighter on busier days, with Mazar-e-Quaid, Frere Hall and Empress Market behind and the Arabian Sea in front."></picture>
 </p>
 
-<p align="center"><sub>Karachi is called the City of Lights. This skyline is redrawn every night from my contribution calendar: one building per week, oldest on the left; seven floors, one per day; a window lights up when I committed that day. Mazar-e-Quaid, Frere Hall and Empress Market stand in the haze behind.</sub></p>
+<p align="center"><sub>Karachi is called the City of Lights. This city is rebuilt every night from my contribution calendar, laid out exactly like the graph: weeks run left to right, Sunday at the back, Saturday on the seafront. Each building is one day, taller and brighter the more I committed. Mazar-e-Quaid, Frere Hall and Empress Market stand behind.</sub></p>
 
 <br>
 
