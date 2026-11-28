@@ -11,10 +11,9 @@ from ..svg import INK
 
 # face colours: (top, front, side), true hues under night floodlights
 WOOD = ("#8A5E3C", "#6F4A2F", "#573A25")      # food-stall counters
-# canopy colours for the food street: (top/front, side)
-CANOPIES = [("#C8433A", "#9E3129"), ("#2E8C5A", "#226B45"), ("#E0882F", "#B56A1F"),
-            ("#2F7E9A", "#236277"), ("#D9B23C", "#AE8D28")]
-FAIRY = ["#FFD58C", "#F4B04A", "#FF9E80", "#FFF3D1", "#FFC36B"]
+# canopy colours for the food street, kept to the card's amber/gold palette: (top/front, side)
+CANOPIES = [("#C98A3A", "#9C6A2A"), ("#B8742F", "#8E5823"), ("#D9A04A", "#A97A33")]
+FAIRY = ["#FFD58C", "#F4B04A", "#FFF3D1", "#FFC36B"]
 LIMESTONE = ("#D6C39A", "#B49E73", "#8A7853")  # Frere Hall: pale yellow Karachi limestone
 SLATE = ("#6B6C7A", "#585966", "#474855")      # Frere Hall roofs
 SANDSTONE = ("#DDB878", "#BE965A", "#91703F")  # Empress Market: golden Jodhpur sandstone
@@ -126,7 +125,7 @@ def stall(x, y, n):
         out.append(f'<path d="M{ax:.1f} {ay:.1f} L{bx:.1f} {by:.1f}" stroke="#3A2A1C" stroke-width=".9"/>')
     cx0, cx1, cy0, cy1 = x0 - .12, x1 + .12, y0 - .12, y1 + .25          # canopy overhangs the counter
     out.append(gable(cx0, cy0, cx1, cy1, 17, 5, (top, top, side)))
-    # stripes on the sloping front of the canopy
+    # cream stripes on the sloping front of the canopy
     for k in range(1, 4):
         ux = cx0 + (cx1 - cx0) * k / 4
         (ax, ay), (bx, by) = P(ux, cy1, 17), P(ux, (cy0 + cy1) / 2, 22)
