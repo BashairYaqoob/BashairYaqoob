@@ -27,6 +27,8 @@ ARSENAL = [
      ["Python", "FastAPI", "Pydantic", "Node.js", "SQLite", "Supabase", "pytest"]),
     ("web/", "interfaces",
      ["TypeScript", "React", "Vite", "Tailwind CSS", "TanStack Start", "Vercel"]),
+    ("cms/", "client sites",
+     ["WordPress", "Elementor"]),
     ("automation/", "browsers & pipelines",
      ["Playwright", "BeautifulSoup", "openpyxl", "Git", "GitHub Actions"]),
     ("foundations/", "coursework in C, C++ & systems",
@@ -77,7 +79,7 @@ PROJECTS = [
 ]
 
 LINKS = [
-    ("linkedin", "LinkedIn", "in/bashair-y", "https://www.linkedin.com/in/bashair-y-a1a274357/"),
+    ("linkedin", "LinkedIn", "in/bashair-yaqoob", "https://www.linkedin.com/in/bashair-yaqoob/"),
     ("portfolio", "Portfolio", "bashairyaqoob.vercel.app", "https://bashairyaqoob.vercel.app"),
     ("email", "Email", "bashairyaqoob@gmail.com", "mailto:bashairyaqoob@gmail.com"),
     ("github", "GitHub", "@BashairYaqoob", "https://github.com/BashairYaqoob"),

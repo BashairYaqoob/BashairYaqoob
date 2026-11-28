@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.linkedin.com/in/bashair-y-a1a274357/"><img src="assets/links/linkedin.svg" width="24%" alt="LinkedIn"></a><a href="https://bashairyaqoob.vercel.app"><img src="assets/links/portfolio.svg" width="24%" alt="Portfolio — bashairyaqoob.vercel.app"></a><a href="mailto:bashairyaqoob@gmail.com"><img src="assets/links/email.svg" width="24%" alt="Email — bashairyaqoob@gmail.com"></a><a href="https://github.com/BashairYaqoob?tab=repositories"><img src="assets/links/github.svg" width="24%" alt="GitHub — @BashairYaqoob"></a>
+  <a href="https://www.linkedin.com/in/bashair-yaqoob/"><img src="assets/links/linkedin.svg" width="24%" alt="LinkedIn"></a><a href="https://bashairyaqoob.vercel.app"><img src="assets/links/portfolio.svg" width="24%" alt="Portfolio — bashairyaqoob.vercel.app"></a><a href="mailto:bashairyaqoob@gmail.com"><img src="assets/links/email.svg" width="24%" alt="Email — bashairyaqoob@gmail.com"></a><a href="https://github.com/BashairYaqoob?tab=repositories"><img src="assets/links/github.svg" width="24%" alt="GitHub — @BashairYaqoob"></a>
 </p>
 
 <br>
@@ -33,7 +33,7 @@ Away from the editor I help run student tech communities:
 </picture>
 
 <p align="center">
-  <picture><source media="(prefers-reduced-motion: reduce)" srcset="assets/static/arsenal.svg"><img src="assets/arsenal.svg" width="100%" alt="ai/: LangChain, LangGraph, RAG, Chroma, Groq, Gemini Realtime, LiveKit Agents, Vapi. backend/: Python, FastAPI, Pydantic, Node.js, SQLite, Supabase, pytest. web/: TypeScript, React, Vite, Tailwind CSS, TanStack Start, Vercel. automation/: Playwright, BeautifulSoup, openpyxl, Git, GitHub Actions. foundations/: C, C++, Assembly, Data Structures, DBMS, Operating Systems, Networks."></picture>
+  <picture><source media="(prefers-reduced-motion: reduce)" srcset="assets/static/arsenal.svg"><img src="assets/arsenal.svg" width="100%" alt="ai/: LangChain, LangGraph, RAG, Chroma, Groq, Gemini Realtime, LiveKit Agents, Vapi. backend/: Python, FastAPI, Pydantic, Node.js, SQLite, Supabase, pytest. web/: TypeScript, React, Vite, Tailwind CSS, TanStack Start, Vercel. cms/: WordPress, Elementor. automation/: Playwright, BeautifulSoup, openpyxl, Git, GitHub Actions. foundations/: C, C++, Assembly, Data Structures, DBMS, Operating Systems, Networks."></picture>
 </p>
 
 <br>
@@ -55,7 +55,7 @@ Away from the editor I help run student tech communities:
   <a href="https://ehsanx.com">EhsanX</a>, a production site for a leadership consultancy ·
   <a href="https://github.com/BashairYaqoob/CarWash_Voice_Agent">Car Wash Voice Agent</a>, Vapi + FastAPI booking ·
   <a href="https://github.com/BashairYaqoob/AI-Project---MindHaven">MindHaven</a>, a mental-health journal with an AI chatbot ·
-  <a href="https://github.com/BashairYaqoob/wandererfolk">Wanderfolk</a>, an AI travel planner ·
+  <a href="https://wandererfolk.lovable.app/">Wanderfolk</a>, an AI travel planner ·
   <a href="https://github.com/BashairYaqoob/Smart-Study-Schedule-Optimizer">Study Schedule Optimizer</a>, topological sort in C++
 </sub></p>
 
@@ -92,7 +92,7 @@ updating    my 3D portfolio → bashairyaqoob.vercel.app
   <img src="assets/sections/connect-light.svg" width="100%" alt="06 — Connect">
 </picture>
 
-Working on something with language models, agents or retrieval? I'd like to hear about it. Reach me on [LinkedIn](https://www.linkedin.com/in/bashair-y-a1a274357/), at [bashairyaqoob@gmail.com](mailto:bashairyaqoob@gmail.com) or [bashairyaqoob05@gmail.com](mailto:bashairyaqoob05@gmail.com), or through [my portfolio](https://bashairyaqoob.vercel.app).
+Working on something with language models, agents or retrieval? I'd like to hear about it. Reach me on [LinkedIn](https://www.linkedin.com/in/bashair-yaqoob/), at [bashairyaqoob@gmail.com](mailto:bashairyaqoob@gmail.com) or [bashairyaqoob05@gmail.com](mailto:bashairyaqoob05@gmail.com), or through [my portfolio](https://bashairyaqoob.vercel.app).
 
 <p align="center">
   <img src="assets/footer.svg" width="100%" alt="Connection closed by @BashairYaqoob, Karachi, Pakistan.">
