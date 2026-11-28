@@ -13,7 +13,7 @@ from ..svg import INK
 WOOD = ("#8A5E3C", "#6F4A2F", "#573A25")      # food-stall counters
 # canopy colours for the food street, kept to the card's amber/gold palette: (top/front, side)
 CANOPIES = [("#C98A3A", "#9C6A2A"), ("#B8742F", "#8E5823"), ("#D9A04A", "#A97A33")]
-FAIRY = ["#9EE4F2", "#7CC8E8", "#D6F3FA", "#8FD9CF", "#B8D4FF"]   # cool: ice, sky, mint, periwinkle
+FAIRY = ["#FFD58C", "#F4B04A", "#FFF3D1", "#FFC36B"]   # warm, in the card's amber/gold theme
 LIMESTONE = ("#D6C39A", "#B49E73", "#8A7853")  # Frere Hall: pale yellow Karachi limestone
 SLATE = ("#6B6C7A", "#585966", "#474855")      # Frere Hall roofs
 SANDSTONE = ("#DDB878", "#BE965A", "#91703F")  # Empress Market: golden Jodhpur sandstone
