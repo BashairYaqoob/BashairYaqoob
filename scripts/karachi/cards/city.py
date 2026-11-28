@@ -1,12 +1,13 @@
-"""Karachi — The City of Lights.
+"""Karachi — The City of Lights, isometric edition.
 
-Data mapping (chronology preserved, like GitHub's own graph):
-  * one building per week, oldest on the left, newest on the right
-  * seven floors per building, one per day, Sunday at street level
-  * a floor's windows light up when that day had contributions; GitHub's level (1-4)
-    sets how bright they burn
-  * building height follows the week's total (square-root scale so quiet weeks still read)
-Landmarks in the haze behind (Mazar-e-Quaid, Frere Hall, Empress Market) are scenery, not data.
+The city is GitHub's contribution graph stood up in 3D:
+  * a 53 × 7 grid of plots — columns are weeks (oldest on the left), rows are weekdays
+    (Sunday at the back, Saturday on the seafront), exactly like the graph on a profile
+  * one building per day: height and lit windows follow that day's contribution count;
+    GitHub's level (1-4) sets how bright the windows burn
+  * quiet days stay as low, dark houses — Karachi's low-rise sprawl around the lit towers
+Landmarks in the haze across the harbour (Mazar-e-Quaid, Frere Hall, Empress Market) are
+scenery, not data.
 """
 from __future__ import annotations
 
@@ -16,110 +17,153 @@ import random
 from ..data import Year
 from ..svg import INK, document, esc
 
-W, H = 1000, 580
-X0, X1 = 56, W - 56
-GROUND = 418
-MAX_H, MIN_H = 176, 30
-WINDOW = {0: "#16264A", 1: "#A8692F", 2: "#F4B04A", 3: "#FFD58C", 4: "#FFF3D1"}
+W, H = 1000, 640
+WINDOW = {0: "#16264A", 1: "#A8692F", 2: "#F4B04A", 3: "#FFD58C", 4: "#FFF3D1"}  # by GitHub level
+S = 15.5                      # plot size in px
+AX, AY = math.radians(15), math.radians(40)   # screen angles of the week and weekday axes
+CA, SA, CB, SB = math.cos(AX), math.sin(AX), math.cos(AY), math.sin(AY)
+OX, OY = 60 + 7 * S * CB, 262  # screen position of the back-left corner of the grid
+MARGIN = 0.15                 # gap between neighbouring buildings, as a share of a plot
+TALLEST = 150                 # px height of the busiest day
+FLOOR = 7.5                   # px per storey
+
+FACE = dict(top="#1B2C4F", front="#0F1D37", side="#0A1528", edge="#22355A")
+LIT_TOP = "#2A3550"
 
 
-def _landmarks(base):
-    """Far-plane silhouettes, drawn from each building's real proportions, simplified."""
-    def mazar(x, s=1.0):  # square marble base with arched faces, tall pointed dome
+def _skyline_behind():
+    """Landmarks standing just behind the grid's back (Sunday) edge, in perspective order."""
+    def at(week):  # screen x and ground y a little behind the back edge at a given week
+        x, y = P(week, -0.8)
+        return x, y
+
+    def mazar(week, s=.95):
+        x, b = at(week)
         p = lambda v: v * s
-        return (f'<path d="M{x} {base} v{-p(46)} h{p(110)} v{p(46)}z"/>'
-                f'<path d="M{x+p(14)} {base-p(46)} C{x+p(12)} {base-p(104)} {x+p(52)} {base-p(118)} {x+p(55)} {base-p(132)} '
-                f'C{x+p(58)} {base-p(118)} {x+p(98)} {base-p(104)} {x+p(96)} {base-p(46)}z"/>'
-                + "".join(f'<path class="arch" d="M{x+p(a)} {base} v{-p(20)} q{p(9)} {-p(14)} {p(18)} 0 v{p(20)}"/>'
+        x -= p(55)
+        return (f'<path d="M{x:.1f} {b:.1f} v{-p(46):.1f} h{p(110):.1f} v{p(46):.1f}z"/>'
+                f'<path d="M{x+p(14):.1f} {b-p(46):.1f} C{x+p(12):.1f} {b-p(104):.1f} {x+p(52):.1f} {b-p(118):.1f} {x+p(55):.1f} {b-p(132):.1f} '
+                f'C{x+p(58):.1f} {b-p(118):.1f} {x+p(98):.1f} {b-p(104):.1f} {x+p(96):.1f} {b-p(46):.1f}z"/>'
+                + "".join(f'<path class="arch" d="M{x+p(a):.1f} {b:.1f} v{-p(20):.1f} q{p(9):.1f} {-p(14):.1f} {p(18):.1f} 0 v{p(20):.1f}"/>'
                           for a in (12, 46, 80)))
 
-    def frere(x):  # gothic hall with stepped wings and a central tower + pointed roof
-        return (f'<path d="M{x} {base} v-40 l8 -10 h16 v-10 h10 v-38 l12 -30 l12 30 v38 h10 v10 h16 l8 10 v40z"/>'
-                f'<path class="arch" d="M{x+34} {base-60} q8 -12 16 0"/><path class="arch" d="M{x+12} {base} v-18 q6 -8 12 0 v18 M{x+68} {base} v-18 q6 -8 12 0 v18"/>')
+    def frere(week):
+        x, b = at(week)
+        x -= 46
+        return (f'<path d="M{x:.1f} {b:.1f} v-40 l8 -10 h16 v-10 h10 v-38 l12 -30 l12 30 v38 h10 v10 h16 l8 10 v40z"/>'
+                f'<path class="arch" d="M{x+34:.1f} {b-60:.1f} q8 -12 16 0"/>')
 
-    def empress(x):  # long market hall, slim clock tower with spire
-        return (f'<path d="M{x} {base} v-36 l10 -8 h20 v-86 l4 -6 v-14 l6 -16 l6 16 v14 l4 6 v86 h20 l10 8 v36z"/>'
-                f'<circle class="clock" cx="{x+40}" cy="{base-112}" r="5"/>')
+    def empress(week):
+        x, b = at(week)
+        x -= 40
+        return (f'<path d="M{x:.1f} {b:.1f} v-36 l10 -8 h20 v-86 l4 -6 v-14 l6 -16 l6 16 v14 l4 6 v86 h20 l10 8 v36z"/>'
+                f'<circle class="clock" cx="{x+40:.1f}" cy="{b-112:.1f}" r="5"/>')
 
-    def tower(x, w, h):
-        return f'<rect x="{x}" y="{base-h}" width="{w}" height="{h}"/>'
+    def tower(week, w, h):
+        x, b = at(week)
+        return f'<rect x="{x:.1f}" y="{b-h:.1f}" width="{w}" height="{h}"/>'
 
-    return "".join([
-        tower(64, 18, 150), mazar(112, 1.25), tower(292, 22, 196), tower(320, 15, 160),
-        frere(436), tower(600, 26, 214), tower(632, 18, 176), empress(742), tower(880, 24, 186),
-    ])
+    return "".join([tower(3, 16, 92), mazar(9), tower(16, 20, 150), tower(18, 14, 118), frere(24),
+                    tower(31, 22, 176), tower(33, 16, 140), empress(39), tower(46, 20, 160), tower(50, 14, 120)])
+
+
+def P(x, y, z=0.0):
+    """World (week, weekday, height px) → screen."""
+    return OX + S * (x * CA - y * CB), OY + S * (x * SA + y * SB) - z
+
+
+def _pts(*pts):
+    return " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
+
+
+def _building(i, k, day, peak, rnd, out, wins, extras):
+    x0, x1 = i + MARGIN, i + 1 - MARGIN
+    y0, y1 = k + MARGIN, k + 1 - MARGIN
+    lit = bool(day.count)
+    h = 10 + (TALLEST - 10) * math.sqrt(day.count / peak) if lit else 3 + rnd.random() * 3.5
+    top = [P(x0, y0, h), P(x1, y0, h), P(x1, y1, h), P(x0, y1, h)]
+    front = [P(x0, y1, 0), P(x1, y1, 0), P(x1, y1, h), P(x0, y1, h)]   # faces the sea (+weekday)
+    side = [P(x1, y0, 0), P(x1, y1, 0), P(x1, y1, h), P(x1, y0, h)]    # faces the future (+week)
+    out.append(f'<polygon class="sd" points="{_pts(*side)}"/><polygon class="fr" points="{_pts(*front)}"/>'
+               f'<polygon class="{"tl" if lit else "tp"}" points="{_pts(*top)}"/>')
+    if not lit:
+        return h
+    # windows, drawn in each face's own plane via an affine matrix: local u along the face, v up
+    floors = max(1, int((h - 4) // FLOOR))
+    face_len = (1 - 2 * MARGIN) * S
+    color = WINDOW[day.level]
+    t = 0.5 + i * 0.06 + k * 0.008
+    fx, fy = P(x0, y1, 0)
+    sx, sy = P(x1, y0, 0)
+    rows_front, rows_side = [], []
+    for f in range(floors):
+        v = 3 + f * FLOOR
+        for u in (2.0, face_len - 4.6):
+            if rnd.random() < .86:
+                rows_front.append(f'<rect x="{u:.1f}" y="{-v-3.4:.1f}" width="2.6" height="3.4"/>')
+        if rnd.random() < .7:
+            rows_side.append(f'<rect x="{face_len/2-1.2:.1f}" y="{-v-3.4:.1f}" width="2.4" height="3.4"/>')
+    cls = "lw tw" if rnd.random() < .1 else "lw"
+    wins.append(f'<g class="{cls}" style="animation-delay:{t:.2f}s" fill="{color}">'
+                f'<g transform="matrix({CA:.4f} {SA:.4f} 0 1 {fx:.1f} {fy:.1f})">{"".join(rows_front)}</g>'
+                f'<g transform="matrix({-CB:.4f} {SB:.4f} 0 1 {sx:.1f} {sy:.1f})" opacity=".7">{"".join(rows_side)}</g></g>')
+    if h > 70 and rnd.random() < .6:  # rooftop aviation light
+        cx, cy = P(i + .5, k + .5, h)
+        extras.append(f'<path d="M{cx:.1f} {cy:.1f}v-9" stroke="#2B4068" stroke-width=".8"/>'
+                      f'<circle class="beacon" style="animation-delay:{rnd.random()*2.6:.1f}s" cx="{cx:.1f}" cy="{cy-10:.1f}" r="1.4" fill="{INK["coral"]}"/>')
+    elif rnd.random() < .35:  # rooftop water tank
+        cx, cy = P(x0 + .2, y0 + .2, h)
+        extras.append(f'<rect x="{cx:.1f}" y="{cy-4:.1f}" width="5" height="4" rx="1" fill="#14233F" stroke="#22355A" stroke-width=".5"/>')
+    return h
 
 
 def render(year: Year) -> str:
     rnd = random.Random(1947)
     weeks = year.weeks
-    pitch = (X1 - X0) / len(weeks)
-    bw = pitch - 3.4
-    peak = max(year.week_total(i) for i in range(len(weeks))) or 1
+    n = len(weeks)
+    peak = max((d.count for d in year.days), default=1) or 1
+    best = year.best_day
 
-    blds, roofs, wins, refl, months = [], [], [], [], []
+    # ground: the grid plate, a promenade along the seafront and the sea below it
+    plate = [P(0, 0), P(n, 0), P(n, 7), P(0, 7)]
+    prom = [P(0, 7), P(n, 7), P(n, 7.45), P(0, 7.45)]
+    sea_top = [P(0, 7.45), P(n, 7.45)]
+    sea = f'{_pts(*sea_top)} {W},{sea_top[1][1]:.1f} {W},{H} 0,{H} 0,{sea_top[0][1]:.1f}'
+
+    cells = sorted(((i, k) for i in range(n) for k in range(7)), key=lambda c: c[0] * SA + c[1] * SB)
+    blds, wins, extras, best_top = [], [], [], None
+    for i, k in cells:
+        day = weeks[i][k]
+        if day.count is None:
+            continue  # outside the 365-day window: an empty plot
+        h = _building(i, k, day, peak, rnd, blds, wins, extras)
+        if day.date == best.date:
+            best_top = P(i + .5, k + .5, h)
+
+    months = []
     for i, week in enumerate(weeks):
-        total = year.week_total(i)
-        h = MIN_H + (MAX_H - MIN_H) * math.sqrt(total / peak) if total else MIN_H - 6 + rnd.random() * 6
-        x = X0 + i * pitch
-        y = GROUND - h
-        fh = h / 7
-        blds.append(f'<rect x="{x:.1f}" y="{y:.1f}" width="{bw:.1f}" height="{h:.1f}"/>')
-        roll = rnd.random()
-        if roll < .34:  # rooftop water tank, the Karachi signature
-            roofs.append(f'<rect x="{x+bw*.5:.1f}" y="{y-6:.1f}" width="{bw*.36:.1f}" height="4.2" rx="1"/>'
-                         f'<path d="M{x+bw*.56:.1f} {y-1.8:.1f}v1.8M{x+bw*.8:.1f} {y-1.8:.1f}v1.8" stroke="#1B2C4B"/>')
-        elif roll < .48 and h > 60:  # antenna with aviation light
-            roofs.append(f'<path d="M{x+bw*.3:.1f} {y:.1f}v-9" stroke="#26395E" stroke-width=".8"/>'
-                         f'<circle class="beacon" style="animation-delay:{rnd.random()*2.6:.1f}s" cx="{x+bw*.3:.1f}" cy="{y-10:.1f}" r="1.3" fill="{INK["coral"]}"/>')
-        elif roll < .6 and h > 44:  # stair cabin
-            roofs.append(f'<rect x="{x+1:.1f}" y="{y-5:.1f}" width="{bw*.42:.1f}" height="5"/>')
-
-        for k, day in enumerate(week):  # k=0 is Sunday, at street level
-            if day.count is None:
-                continue
-            wy = GROUND - (k + 1) * fh + fh * .26
-            wh = max(fh * .48, 1.5)
-            for j in range(2):
-                wx = x + 2.3 + j * (bw - 4.6 - 3.6)
-                if day.count:
-                    lit = WINDOW[day.level]
-                    cls = "lw tw" if rnd.random() < .07 else "lw"
-                    t = 0.5 + i * 0.07 + k * 0.01
-                    wins.append(f'<rect class="{cls}" style="animation-delay:{t:.2f}s" x="{wx:.1f}" y="{wy:.1f}" '
-                                f'width="3.6" height="{wh:.1f}" fill="{lit}"/>')
-                else:
-                    wins.append(f'<rect x="{wx:.1f}" y="{wy:.1f}" width="3.6" height="{wh:.1f}" fill="{WINDOW[0]}"/>')
-            if day.count:  # reflection on the water, further out for higher floors
-                ry = GROUND + 20 + (GROUND - wy) * .36
-                refl.append(f'<rect class="rf" style="animation-delay:{(i % 7) * .5:.1f}s" x="{x+bw/2-1-day.level/2:.1f}" '
-                            f'y="{ry:.1f}" width="{2+day.level:.0f}" height="1.4" fill="{WINDOW[day.level]}" '
-                            f'opacity="{.16+day.level*.07:.2f}"/>')
         for day in week:
             if day.count is not None and day.date.day == 1:
-                months.append(f'<text class="m" x="{x+bw/2:.1f}" y="{GROUND+17}" text-anchor="middle">{day.date:%b}</text>')
+                lx, ly = P(i + .5, 7.95)
+                months.append(f'<text class="m mo" transform="translate({lx:.1f} {ly:.1f}) rotate(15)" text-anchor="middle">{day.date:%b}</text>')
 
-    bi = year.best_week
-    bx = X0 + bi * pitch + bw / 2
-    btop = GROUND - (MIN_H + (MAX_H - MIN_H) * math.sqrt(year.week_total(bi) / peak))
-    wk0 = weeks[bi][0].date
-    marker = (f'<path d="M{bx:.1f} {btop-16:.1f} V{btop-44:.1f}" stroke="{INK["gold"]}" stroke-width=".8" stroke-dasharray="2 2"/>'
-              f'<circle cx="{bx:.1f}" cy="{btop-47:.1f}" r="2.6" fill="{INK["gold"]}"/>'
-              f'<text class="m tag" x="{bx-9:.1f}" y="{btop-43:.1f}" text-anchor="end">brightest week · {wk0:%d %b} · {year.week_total(bi)}</text>')
-
-    stars = "".join(
-        f'<circle cx="{rnd.uniform(24, W-24):.0f}" cy="{rnd.uniform(156, 290):.0f}" r="{rnd.choice([.6, .8, 1.1])}" '
-        f'opacity="{rnd.uniform(.2, .7):.2f}"/>' for _ in range(64))
-    wave_d = f"M{X0} 0 " + "q 20 -3 40 0 " + "t 40 0 " * 22
-    waves = "".join(f'<g transform="translate(0 {GROUND+42+k*21})"><path class="wv" style="animation-delay:{k*.8:.1f}s" d="{wave_d}"/></g>'
-                    for k, _ in enumerate(range(5)))
-    dhow = (f'<g transform="translate(812 {GROUND+66})"><path d="M0 0h50l-9 8H8z" fill="#0A1A2A" stroke="#2A4560" stroke-width=".7"/>'
+    waves = "".join(
+        f'<g transform="translate(0 {34 + r*22})"><path class="wv" style="animation-delay:{r*.8:.1f}s" '
+        f'd="M{P(-1, 7.45)[0]:.0f} {P(-1, 7.45)[1]:.0f} L{P(n+3, 7.45)[0]:.0f} {P(n+3, 7.45)[1]:.0f}" stroke-dasharray="{6+r*3} {10+r*4}"/></g>'
+        for r in range(6))
+    bx, by = best_top
+    marker = (f'<path d="M{bx:.1f} {by-14:.1f} V{by-46:.1f}" stroke="{INK["gold"]}" stroke-width=".8" stroke-dasharray="2 2"/>'
+              f'<circle cx="{bx:.1f}" cy="{by-49:.1f}" r="2.6" fill="{INK["gold"]}"/>'
+              f'<text class="m tag" x="{bx-9:.1f}" y="{by-45:.1f}" text-anchor="end">brightest night · {best.date:%d %b} · {best.count}</text>')
+    dhow = (f'<g transform="translate(150 {H-96})"><path d="M0 0h50l-9 8H8z" fill="#0A1A2A" stroke="#2A4560" stroke-width=".7"/>'
             f'<path d="M24 0V-34l18 30z" fill="#12263D" stroke="#2A4560" stroke-width=".7"/>'
             f'<circle class="beacon" cx="24" cy="-36" r="1.3" fill="{INK["amber"]}"/></g>')
+    stars = "".join(
+        f'<circle cx="{rnd.uniform(380, W-24):.0f}" cy="{rnd.uniform(150, 250):.0f}" r="{rnd.choice([.6, .8, 1.1])}" '
+        f'opacity="{rnd.uniform(.2, .7):.2f}"/>' for _ in range(52))
 
-    best = year.best_day
     stats = [(f"{year.total}", "contributions"), (f"{year.active_days}", "nights lit"),
-             (f"{best.date.day} {best.date:%b}", f"brightest night · {best.count}")]
+             (f"{year.longest_streak}", "longest streak")]
     stat_svg = "".join(
         f'<text class="m b stat" x="{W-56-(2-k)*142}" y="104" text-anchor="end">{esc(a)}</text>'
         f'<text class="m small" x="{W-56-(2-k)*142}" y="121" text-anchor="end">{esc(b)}</text>'
@@ -127,58 +171,62 @@ def render(year: Year) -> str:
     legend = "".join(f'<rect x="{56+k*14}" y="{H-38}" width="9" height="9" rx="1.5" fill="{WINDOW[k]}"/>' for k in range(5))
 
     title = "Karachi — The City of Lights"
-    caption = "each building is a week of my GitHub year · each lit window, a day I shipped code"
+    caption = "my GitHub year, built in 3D · one building per day, a lit window for every day I shipped code"
     span = f"{year.start:%d %b %Y} → {year.end:%d %b %Y}"
-    foot = f"floors run Sun → Sat, street to roof · {span}"
+    foot = f"weeks run left → right, Sunday at the back, Saturday on the seafront · {span}"
 
     css = (
-        f".m{{fill:{INK['muted']}}}.small{{font-size:9.5px}}text.m.stat{{font-size:20px;fill:{INK['gold']}}}"
-        f"text.m.tag{{font-size:10px;fill:{INK['gold']}}}text.m{{font-size:9.5px}}"
-        f".far{{fill:#101F3B;stroke:#2B4068;stroke-width:1}}.far .arch,.far .clock{{fill:none;stroke:#34507E}}"
-        f".blds{{fill:#0C182D;stroke:#1C2D4C;stroke-width:.6}}.roofs{{fill:#0C182D;stroke:#1C2D4C;stroke-width:.6}}"
+        f".m{{fill:{INK['muted']}}}text.m{{font-size:9.5px}}.small{{font-size:9.5px}}"
+        f"text.m.stat{{font-size:20px;fill:{INK['gold']}}}text.m.tag{{font-size:10px;fill:{INK['gold']}}}"
+        f"text.m.mo{{font-size:9px;fill:#5B6E92}}"
+        f".far{{fill:#0F1C36;stroke:#22355A;stroke-width:.9}}.far .arch,.far .clock{{fill:none;stroke:#2B4068}}"
+        f".tp{{fill:{FACE['top']}}}.tl{{fill:{LIT_TOP}}}.fr{{fill:{FACE['front']}}}.sd{{fill:{FACE['side']}}}"
+        f".blds polygon{{stroke:{FACE['edge']};stroke-width:.5;stroke-linejoin:round}}"
         ".lw{animation:on .7s ease-out backwards}@keyframes on{from{opacity:0}}"
         ".tw{animation:on .7s ease-out backwards,tw 7s ease-in-out 6s infinite}"
         "@keyframes tw{45%{opacity:1}50%{opacity:.25}55%{opacity:1}}"
         ".beacon{animation:bl 2.8s steps(1) infinite}@keyframes bl{50%{opacity:.15}}"
-        ".rf{animation:sh 4s ease-in-out infinite}@keyframes sh{50%{transform:translateX(2px);opacity:.06}}"
-        ".wv{fill:none;stroke:#1C3850;stroke-width:.8;animation:wv 8s ease-in-out infinite}"
-        "@keyframes wv{50%{transform:translateX(-14px)}}"
+        ".wv{fill:none;stroke:#1C3850;stroke-width:.9;animation:wv 9s ease-in-out infinite}"
+        "@keyframes wv{50%{transform:translateX(-16px)}}"
     )
     defs = (
         '<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#050B18"/>'
-        '<stop offset=".64" stop-color="#0C1731"/><stop offset=".72" stop-color="#1B2442"/>'
-        '<stop offset=".721" stop-color="#07172A"/><stop offset="1" stop-color="#040D19"/></linearGradient>'
+        '<stop offset=".7" stop-color="#0D1833"/><stop offset="1" stop-color="#101A36"/></linearGradient>'
+        '<linearGradient id="sea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#08192C"/>'
+        '<stop offset="1" stop-color="#040D19"/></linearGradient>'
         f'<radialGradient id="moonglow"><stop offset="0" stop-color="{INK["gold"]}" stop-opacity=".32"/>'
         f'<stop offset="1" stop-color="{INK["gold"]}" stop-opacity="0"/></radialGradient>'
-        f'<radialGradient id="haze" cx=".5" cy="1" r=".6"><stop offset="0" stop-color="{INK["ember"]}" stop-opacity=".17"/>'
+        f'<radialGradient id="haze" cx=".7" cy=".55" r=".55"><stop offset="0" stop-color="{INK["ember"]}" stop-opacity=".14"/>'
         f'<stop offset="1" stop-color="{INK["ember"]}" stop-opacity="0"/></radialGradient>'
-        f'<clipPath id="card"><rect x="1" y="1" width="{W-2}" height="{H-2}" rx="16"/></clipPath>'
+                f'<clipPath id="card"><rect x="1" y="1" width="{W-2}" height="{H-2}" rx="16"/></clipPath>'
     )
     body = f'''<g clip-path="url(#card)">
 <rect width="{W}" height="{H}" fill="url(#sky)"/>
 <g fill="#C9D4EA">{stars}</g>
-<circle cx="566" cy="206" r="48" fill="url(#moonglow)"/>
-<path d="M574 187a21 21 0 1 0 9 36a17 17 0 1 1 -9 -36z" fill="{INK['gold']}" opacity=".92"/>
-<rect y="{GROUND-230}" width="{W}" height="240" fill="url(#haze)"/>
-<g class="far">{_landmarks(GROUND)}</g>
-<g class="blds">{"".join(blds)}</g><g class="roofs">{"".join(roofs)}</g>{"".join(wins)}
-<rect y="{GROUND}" width="{W}" height="2" fill="#22355A"/>
+<circle cx="860" cy="210" r="48" fill="url(#moonglow)"/>
+<path d="M868 191a21 21 0 1 0 9 36a17 17 0 1 1 -9 -36z" fill="{INK['gold']}" opacity=".92"/>
+<rect width="{W}" height="{H}" fill="url(#haze)"/>
+<g class="far">{_skyline_behind()}</g>
+<polygon points="{sea}" fill="url(#sea)"/>
+{waves}{dhow}
+<polygon points="{_pts(*plate)}" fill="#0B1528" stroke="#1C2D4C" stroke-width=".8"/>
+<polygon points="{_pts(*prom)}" fill="#152440"/>
+<g class="blds">{"".join(blds)}</g>{"".join(extras)}{"".join(wins)}
 {"".join(months)}
-{waves}{"".join(refl)}{dhow}
-<text class="m" x="{W-56}" y="{H-60}" text-anchor="end" style="font-size:9px;letter-spacing:.5em;fill:#2E4A66">ARABIAN SEA</text>
 {marker}
+<text class="m" x="{W-56}" y="{H-60}" text-anchor="end" style="font-size:9px;letter-spacing:.5em;fill:#2E4A66">ARABIAN SEA</text>
 </g>
 <rect x=".5" y=".5" width="{W-1}" height="{H-1}" rx="16" fill="none" stroke="{INK['line']}"/>
-<text class="m" x="56" y="58" style="font-size:11px">$ ./render-city --weeks {len(weeks)} --tz Asia/Karachi</text>
+<text class="m" x="56" y="58" style="font-size:11px">$ ./render-city --3d --days {len(year.days)} --tz Asia/Karachi</text>
 <text class="s" x="54" y="104" style="font-size:40px" fill="{INK['cream']}">Karachi <tspan fill="{INK['dim']}">—</tspan> <tspan class="i" fill="{INK['gold']}">The City of Lights</tspan></text>
 <text class="m" x="56" y="130" style="font-size:10.5px">{esc(caption)}</text>
 {stat_svg}
 {legend}
 <text class="m" x="{56+5*14+8}" y="{H-30}">dark → brightest · {esc(foot)}</text>'''
-    desc = (f"An illustrated Karachi night skyline generated from GitHub contributions, {span}. "
-            f"One building per week, seven floors per building (one per day), windows lit on days with contributions. "
-            f"{year.total} contributions on {year.active_days} days; brightest day {best.date:%d %B %Y} with {best.count}.")
+    desc = (f"An isometric Karachi night skyline built from GitHub contributions, {span}: a 53-by-7 grid laid out like "
+            f"the contribution graph, one building per day, taller and brighter on busier days. {year.total} "
+            f"contributions on {year.active_days} days; brightest day {best.date:%d %B %Y} with {best.count}.")
     text = (title + caption + foot + "".join(a + b for a, b in stats) + "JanFebMarAprMayJunJulAugSepOctNovDec"
-            + "$./render-city--weeks0123456789--tzAsia/KarachiARABIANSEAbrightest week·→")
+            + "$./render-city--3d--days0123456789--tzAsia/KarachiARABIANSEAbrightest night·→")
     return document(W, H, body, css=css, defs=defs, text_for_fonts=text, families=("mono", "serif"),
                     title=title, desc=desc)
