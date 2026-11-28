@@ -147,7 +147,7 @@ def render(year: Year) -> str:
         f"text.m.stat{{font-size:20px;fill:{INK['gold']}}}text.m.tag{{font-size:10px;fill:{INK['gold']};paint-order:stroke;stroke:#0A1224;stroke-width:3.2px;stroke-linejoin:round}}"
         f"text.m.mo{{font-size:9px;fill:#5B6E92}}"
         ".land polygon{stroke:#000;stroke-opacity:.28;stroke-width:.5;stroke-linejoin:round}"
-        + camel_css +
+        + camel_css + landmarks.FAIRY_CSS +
         f".tp{{fill:{FACE['top']}}}.tl{{fill:{LIT_TOP}}}.fr{{fill:{FACE['front']}}}.sd{{fill:{FACE['side']}}}"
         f".blds polygon{{stroke:{FACE['edge']};stroke-width:.5;stroke-linejoin:round}}"
         ".lw{animation:on .7s ease-out backwards}@keyframes on{from{opacity:0}}"

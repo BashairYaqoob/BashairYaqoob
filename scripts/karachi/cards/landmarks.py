@@ -1,7 +1,7 @@
 """Karachi landmarks drawn in the city's isometric projection. Scenery, not data.
 
 Behind the grid: Mazar-e-Quaid (floodlit marble, as at night), Frere Hall, Empress Market,
-Bahria Icon Tower and a few anonymous towers. On the seafront: Teen Talwar. On the beach:
+Bahria Icon Tower, with a food street of stalls under fairy lights between them. On the seafront: Teen Talwar. On the beach:
 a Sea View camel.
 """
 from __future__ import annotations
@@ -10,7 +10,11 @@ from ..iso import CA, CB, P, S, SA, depth, front_plane, pts, side_plane
 from ..svg import INK
 
 # face colours: (top, front, side), true hues under night floodlights
-CONCRETE = ("#7A7466", "#615C51", "#4A463E")  # Karachi's beige concrete towers
+WOOD = ("#8A5E3C", "#6F4A2F", "#573A25")      # food-stall counters
+# canopy colours for the food street: (top/front, side)
+CANOPIES = [("#C8433A", "#9E3129"), ("#2E8C5A", "#226B45"), ("#E0882F", "#B56A1F"),
+            ("#2F7E9A", "#236277"), ("#D9B23C", "#AE8D28")]
+FAIRY = ["#FFD58C", "#F4B04A", "#FF9E80", "#FFF3D1", "#FFC36B"]
 LIMESTONE = ("#D6C39A", "#B49E73", "#8A7853")  # Frere Hall: pale yellow Karachi limestone
 SLATE = ("#6B6C7A", "#585966", "#474855")      # Frere Hall roofs
 SANDSTONE = ("#DDB878", "#BE965A", "#91703F")  # Empress Market: golden Jodhpur sandstone
@@ -110,17 +114,72 @@ def bahria_icon():
     return depth((x0 + x1) / 2, (y0 + y1) / 2), "".join(out)
 
 
-def anonymous_towers():
-    spec = [(1.6, 2.9, 86), (13.6, 15.0, 112), (15.6, 16.7, 88), (26.6, 28.1, 142), (28.8, 29.9, 110),
-            (42.4, 43.8, 124), (51.0, 52.2, 98)]
-    return [(depth((x0 + x1) / 2, -2.4), box(x0, -3.2, x1, -1.6, 0, h, CONCRETE)) for x0, x1, h in spec]
+def stall(x, y, n):
+    """One food stall: a wooden counter with a lit front, posts, a striped canopy and a bulb."""
+    top, side = CANOPIES[n % len(CANOPIES)]
+    x0, x1, y0, y1 = x, x + 1.15, y, y + .8
+    out = [box(x0, y0, x1, y1, 0, 9, WOOD)]
+    fl = (x1 - x0) * S
+    out.append(f'<g transform="{front_plane(x0, y1)}"><rect x="2" y="-8" width="{fl-4:.1f}" height="5" fill="{INK["gold"]}" opacity=".8"/></g>')
+    for px, py in ((x0, y1), (x1, y1), (x1, y0)):                       # canopy posts
+        (ax, ay), (bx, by) = P(px, py, 9), P(px, py, 17)
+        out.append(f'<path d="M{ax:.1f} {ay:.1f} L{bx:.1f} {by:.1f}" stroke="#3A2A1C" stroke-width=".9"/>')
+    cx0, cx1, cy0, cy1 = x0 - .12, x1 + .12, y0 - .12, y1 + .25          # canopy overhangs the counter
+    out.append(gable(cx0, cy0, cx1, cy1, 17, 5, (top, top, side)))
+    # stripes on the sloping front of the canopy
+    for k in range(1, 4):
+        ux = cx0 + (cx1 - cx0) * k / 4
+        (ax, ay), (bx, by) = P(ux, cy1, 17), P(ux, (cy0 + cy1) / 2, 22)
+        out.append(f'<path d="M{ax:.1f} {ay:.1f} L{bx:.1f} {by:.1f}" stroke="#F3E9D2" stroke-opacity=".55" stroke-width="1.6"/>')
+    bx, by = P((x0 + x1) / 2, y1, 15)
+    out.append(f'<circle cx="{bx:.1f}" cy="{by:.1f}" r="1.6" fill="#FFF3D1"/>'
+               f'<circle cx="{bx:.1f}" cy="{by:.1f}" r="6" fill="{INK["gold"]}" opacity=".18"/>')
+    return depth(x0 + .5, y0 + .4), "".join(out)
+
+
+def fairy_string(xa, xb, y=-1.05, z=24, sag=7, step=7, seed=0):
+    """Poles at both ends and a sagging string of twinkling bulbs between them."""
+    (ax, ay), (bx, by) = P(xa, y, z), P(xb, y, z)
+    mx, my = (ax + bx) / 2, (ay + by) / 2 + sag * 2
+    out = []
+    for px in (xa, xb):
+        (gx, gy), (tx, ty) = P(px, y), P(px, y, z + 1)
+        out.append(f'<path d="M{gx:.1f} {gy:.1f} L{tx:.1f} {ty:.1f}" stroke="#4A3A2A" stroke-width="1.1"/>')
+    out.append(f'<path d="M{ax:.1f} {ay:.1f} Q{mx:.1f} {my:.1f} {bx:.1f} {by:.1f}" fill="none" stroke="#2A2A36" stroke-width=".6"/>')
+    count = max(3, int(((bx - ax) ** 2 + (by - ay) ** 2) ** .5 // step))
+    for j in range(1, count):
+        t = j / count
+        qx = (1 - t) ** 2 * ax + 2 * (1 - t) * t * mx + t * t * bx
+        qy = (1 - t) ** 2 * ay + 2 * (1 - t) * t * my + t * t * by
+        c = FAIRY[(j + seed) % len(FAIRY)]
+        out.append(f'<circle class="fl" style="animation-delay:{((j * 7 + seed * 3) % 23) / 10:.1f}s" '
+                   f'cx="{qx:.1f}" cy="{qy+1:.1f}" r="1.6" fill="{c}"/>')
+    return "".join(out)
+
+
+# twinkle for the fairy lights; the card adds this to its stylesheet
+FAIRY_CSS = ".fl{animation:fl 2.6s ease-in-out infinite}@keyframes fl{50%{opacity:.35}}"
+
+
+def food_street():
+    """Clusters of stalls where plain towers used to stand, each under a run of fairy lights."""
+    clusters = [(0.6, 3), (12.6, 4), (25.8, 4), (41.6, 4), (50.4, 2)]   # (first week, stalls)
+    items, strings, n = [], [], 0
+    for c, (x, count) in enumerate(clusters):
+        for j in range(count):
+            items.append(stall(x + j * 1.45, -2.3, n))
+            n += 1
+        strings.append(fairy_string(x - .3, x + count * 1.45 - .05, seed=c))
+    return items, "".join(strings)
 
 
 def behind_the_city():
     """All landmarks behind the grid, in painter's order. Returns (svg, mazar dome tip)."""
     mz_depth, mz_svg, tip = mazar()
-    items = [(mz_depth, mz_svg), frere_hall(), empress_market(), bahria_icon(), *anonymous_towers()]
-    return "".join(svg for _, svg in sorted(items, key=lambda t: t[0])), tip
+    stalls, strings = food_street()
+    items = [(mz_depth, mz_svg), frere_hall(), empress_market(), bahria_icon(), *stalls]
+    # fairy lights hang in front of the stalls, so they go on last
+    return "".join(svg for _, svg in sorted(items, key=lambda t: t[0])) + strings, tip
 
 
 def teen_talwar(x, y):
