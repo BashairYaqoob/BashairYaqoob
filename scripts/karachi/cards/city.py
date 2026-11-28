@@ -6,8 +6,9 @@ The city is GitHub's contribution graph stood up in 3D:
   * one building per day: height and lit windows follow that day's contribution count;
     GitHub's level (1-4) sets how bright the windows burn
   * quiet days stay as low, dark houses — Karachi's low-rise sprawl around the lit towers
-Landmarks in the haze across the harbour (Mazar-e-Quaid, Frere Hall, Empress Market) are
-scenery, not data.
+Around it, drawn in the same projection (see landmarks.py) as scenery, not data: Mazar-e-Quaid,
+Frere Hall, Empress Market and Bahria Icon Tower behind; Teen Talwar on the seafront; a Sea View
+camel on the beach.
 """
 from __future__ import annotations
 
@@ -15,65 +16,18 @@ import math
 import random
 
 from ..data import Year
+from ..iso import CA, CB, P, S, SA, SB, depth, pts as _pts
 from ..svg import INK, document, esc
+from . import landmarks
 
-W, H = 1000, 640
+W, H = 1000, 676
 WINDOW = {0: "#16264A", 1: "#A8692F", 2: "#F4B04A", 3: "#FFD58C", 4: "#FFF3D1"}  # by GitHub level
-S = 15.5                      # plot size in px
-AX, AY = math.radians(15), math.radians(40)   # screen angles of the week and weekday axes
-CA, SA, CB, SB = math.cos(AX), math.sin(AX), math.cos(AY), math.sin(AY)
-OX, OY = 60 + 7 * S * CB, 262  # screen position of the back-left corner of the grid
 MARGIN = 0.15                 # gap between neighbouring buildings, as a share of a plot
 TALLEST = 150                 # px height of the busiest day
 FLOOR = 7.5                   # px per storey
 
 FACE = dict(top="#1B2C4F", front="#0F1D37", side="#0A1528", edge="#22355A")
 LIT_TOP = "#2A3550"
-
-
-def _skyline_behind():
-    """Landmarks standing just behind the grid's back (Sunday) edge, in perspective order."""
-    def at(week):  # screen x and ground y a little behind the back edge at a given week
-        x, y = P(week, -0.8)
-        return x, y
-
-    def mazar(week, s=.95):
-        x, b = at(week)
-        p = lambda v: v * s
-        x -= p(55)
-        return (f'<path d="M{x:.1f} {b:.1f} v{-p(46):.1f} h{p(110):.1f} v{p(46):.1f}z"/>'
-                f'<path d="M{x+p(14):.1f} {b-p(46):.1f} C{x+p(12):.1f} {b-p(104):.1f} {x+p(52):.1f} {b-p(118):.1f} {x+p(55):.1f} {b-p(132):.1f} '
-                f'C{x+p(58):.1f} {b-p(118):.1f} {x+p(98):.1f} {b-p(104):.1f} {x+p(96):.1f} {b-p(46):.1f}z"/>'
-                + "".join(f'<path class="arch" d="M{x+p(a):.1f} {b:.1f} v{-p(20):.1f} q{p(9):.1f} {-p(14):.1f} {p(18):.1f} 0 v{p(20):.1f}"/>'
-                          for a in (12, 46, 80)))
-
-    def frere(week):
-        x, b = at(week)
-        x -= 46
-        return (f'<path d="M{x:.1f} {b:.1f} v-40 l8 -10 h16 v-10 h10 v-38 l12 -30 l12 30 v38 h10 v10 h16 l8 10 v40z"/>'
-                f'<path class="arch" d="M{x+34:.1f} {b-60:.1f} q8 -12 16 0"/>')
-
-    def empress(week):
-        x, b = at(week)
-        x -= 40
-        return (f'<path d="M{x:.1f} {b:.1f} v-36 l10 -8 h20 v-86 l4 -6 v-14 l6 -16 l6 16 v14 l4 6 v86 h20 l10 8 v36z"/>'
-                f'<circle class="clock" cx="{x+40:.1f}" cy="{b-112:.1f}" r="5"/>')
-
-    def tower(week, w, h):
-        x, b = at(week)
-        return f'<rect x="{x:.1f}" y="{b-h:.1f}" width="{w}" height="{h}"/>'
-
-    return "".join([tower(3, 16, 92), mazar(9), tower(16, 20, 150), tower(18, 14, 118), frere(24),
-                    tower(31, 22, 176), tower(33, 16, 140), empress(39), tower(46, 20, 160), tower(50, 14, 120)])
-
-
-def P(x, y, z=0.0):
-    """World (week, weekday, height px) → screen."""
-    return OX + S * (x * CA - y * CB), OY + S * (x * SA + y * SB) - z
-
-
-def _pts(*pts):
-    return " ".join(f"{x:.1f},{y:.1f}" for x, y in pts)
 
 
 def _building(i, k, day, peak, rnd, out, wins, extras):
@@ -126,11 +80,12 @@ def render(year: Year) -> str:
 
     # ground: the grid plate, a promenade along the seafront and the sea below it
     plate = [P(0, 0), P(n, 0), P(n, 7), P(0, 7)]
-    prom = [P(0, 7), P(n, 7), P(n, 7.45), P(0, 7.45)]
-    sea_top = [P(0, 7.45), P(n, 7.45)]
+    prom = [P(0, 7), P(n, 7), P(n + 3.2, 7), P(n + 3.2, 7.45), P(0, 7.45)]
+    sea_top = [P(0, 7.45), P(n + 3.2, 7.45)]
+    beach = [P(8, 7.45), P(21, 7.45), P(21, 14.2), P(13, 14.2)]
     sea = f'{_pts(*sea_top)} {W},{sea_top[1][1]:.1f} {W},{H} 0,{H} 0,{sea_top[0][1]:.1f}'
 
-    cells = sorted(((i, k) for i in range(n) for k in range(7)), key=lambda c: c[0] * SA + c[1] * SB)
+    cells = sorted(((i, k) for i in range(n) for k in range(7)), key=lambda c: depth(*c))
     blds, wins, extras, best_top = [], [], [], None
     for i, k in cells:
         day = weeks[i][k]
@@ -139,6 +94,8 @@ def render(year: Year) -> str:
         h = _building(i, k, day, peak, rnd, blds, wins, extras)
         if day.date == best.date:
             best_top = P(i + .5, k + .5, h)
+
+    behind, tip = landmarks.behind_the_city()
 
     months = []
     for i, week in enumerate(weeks):
@@ -155,7 +112,7 @@ def render(year: Year) -> str:
     marker = (f'<path d="M{bx:.1f} {by-14:.1f} V{by-46:.1f}" stroke="{INK["gold"]}" stroke-width=".8" stroke-dasharray="2 2"/>'
               f'<circle cx="{bx:.1f}" cy="{by-49:.1f}" r="2.6" fill="{INK["gold"]}"/>'
               f'<text class="m tag" x="{bx-9:.1f}" y="{by-45:.1f}" text-anchor="end">brightest night · {best.date:%d %b} · {best.count}</text>')
-    dhow = (f'<g transform="translate(150 {H-96})"><path d="M0 0h50l-9 8H8z" fill="#0A1A2A" stroke="#2A4560" stroke-width=".7"/>'
+    dhow = (f'<g transform="translate(230 {H-92})"><path d="M0 0h50l-9 8H8z" fill="#0A1A2A" stroke="#2A4560" stroke-width=".7"/>'
             f'<path d="M24 0V-34l18 30z" fill="#12263D" stroke="#2A4560" stroke-width=".7"/>'
             f'<circle class="beacon" cx="24" cy="-36" r="1.3" fill="{INK["amber"]}"/></g>')
     stars = "".join(
@@ -179,7 +136,7 @@ def render(year: Year) -> str:
         f".m{{fill:{INK['muted']}}}text.m{{font-size:9.5px}}.small{{font-size:9.5px}}"
         f"text.m.stat{{font-size:20px;fill:{INK['gold']}}}text.m.tag{{font-size:10px;fill:{INK['gold']}}}"
         f"text.m.mo{{font-size:9px;fill:#5B6E92}}"
-        f".far{{fill:#0F1C36;stroke:#22355A;stroke-width:.9}}.far .arch,.far .clock{{fill:none;stroke:#2B4068}}"
+        ".land polygon{stroke:#22355A;stroke-width:.5;stroke-linejoin:round}"
         f".tp{{fill:{FACE['top']}}}.tl{{fill:{LIT_TOP}}}.fr{{fill:{FACE['front']}}}.sd{{fill:{FACE['side']}}}"
         f".blds polygon{{stroke:{FACE['edge']};stroke-width:.5;stroke-linejoin:round}}"
         ".lw{animation:on .7s ease-out backwards}@keyframes on{from{opacity:0}}"
@@ -198,7 +155,11 @@ def render(year: Year) -> str:
         f'<stop offset="1" stop-color="{INK["gold"]}" stop-opacity="0"/></radialGradient>'
         f'<radialGradient id="haze" cx=".7" cy=".55" r=".55"><stop offset="0" stop-color="{INK["ember"]}" stop-opacity=".14"/>'
         f'<stop offset="1" stop-color="{INK["ember"]}" stop-opacity="0"/></radialGradient>'
-                f'<clipPath id="card"><rect x="1" y="1" width="{W-2}" height="{H-2}" rx="16"/></clipPath>'
+                '<linearGradient id="marble" x1="0" x2="1"><stop offset="0" stop-color="#7B88A6"/>'
+        '<stop offset=".45" stop-color="#D3DBEA"/><stop offset="1" stop-color="#8592B0"/></linearGradient>'
+        '<radialGradient id="mglow"><stop offset="0" stop-color="#C9D4EA" stop-opacity=".16"/>'
+        '<stop offset="1" stop-color="#C9D4EA" stop-opacity="0"/></radialGradient>'
+        f'<clipPath id="card"><rect x="1" y="1" width="{W-2}" height="{H-2}" rx="16"/></clipPath>'
     )
     body = f'''<g clip-path="url(#card)">
 <rect width="{W}" height="{H}" fill="url(#sky)"/>
@@ -206,12 +167,14 @@ def render(year: Year) -> str:
 <circle cx="860" cy="210" r="48" fill="url(#moonglow)"/>
 <path d="M868 191a21 21 0 1 0 9 36a17 17 0 1 1 -9 -36z" fill="{INK['gold']}" opacity=".92"/>
 <rect width="{W}" height="{H}" fill="url(#haze)"/>
-<g class="far">{_skyline_behind()}</g>
+<g class="land">{behind}</g>
+<ellipse cx="{tip[0]:.1f}" cy="{tip[1]+40:.1f}" rx="46" ry="58" fill="url(#mglow)"/>
 <polygon points="{sea}" fill="url(#sea)"/>
-{waves}{dhow}
+{waves}<polygon points="{_pts(*beach)}" fill="#26232F" stroke="#3A4F6E" stroke-width=".8" stroke-dasharray="5 4"/>{landmarks.camel(16.4, 13.0)}{dhow}
 <polygon points="{_pts(*plate)}" fill="#0B1528" stroke="#1C2D4C" stroke-width=".8"/>
 <polygon points="{_pts(*prom)}" fill="#152440"/>
 <g class="blds">{"".join(blds)}</g>{"".join(extras)}{"".join(wins)}
+<g class="land">{landmarks.teen_talwar(n + 1.9, 6.1)}</g>
 {"".join(months)}
 {marker}
 <text class="m" x="{W-56}" y="{H-60}" text-anchor="end" style="font-size:9px;letter-spacing:.5em;fill:#2E4A66">ARABIAN SEA</text>
